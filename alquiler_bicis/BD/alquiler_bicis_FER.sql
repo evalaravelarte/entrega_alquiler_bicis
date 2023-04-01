@@ -29,8 +29,7 @@ CREATE TABLE IF NOT EXISTS `usuario` (
     REFERENCES `bici` (`cod_bici`)
     ON DELETE NO ACTION
     ON UPDATE CASCADE)
- AUTO_INCREMENT = 0;
-CREATE INDEX idx_cod_usu ON  usuario (`cod_usuario`);
+CREATE INDEX idx_cod_usu ON usuario (`cod_usuario`);
 
 
 INSERT INTO bici (cod_bici) VALUES
