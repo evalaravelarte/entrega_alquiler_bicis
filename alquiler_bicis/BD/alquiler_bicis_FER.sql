@@ -32,18 +32,11 @@ CREATE TABLE IF NOT EXISTS `usuario` (
  AUTO_INCREMENT = 0;
 CREATE INDEX idx_cod_usu ON  usuario (`cod_usuario`);
 
-/*
+
 INSERT INTO bici (cod_bici) VALUES
-(0),
-(1),
-(2),
-(3),
-(4),
-(5);
+(100);
 
 INSERT INTO usuario (cod_usuario, nombre) VALUES
 (1, 'Juan'),
 (2, 'Maria'),
 (3, 'Pedro');
-
-*/
