@@ -1,4 +1,3 @@
-//Entrega Tema 8 Alquiler bicis
 package alquiler_bicis;
 
 import java.awt.EventQueue;
