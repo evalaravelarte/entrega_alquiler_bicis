@@ -1,4 +1,4 @@
-//Eva y Fernando
+//Entrega Tema 8 Alquiler bicis
 package alquiler_bicis;
 
 import java.awt.EventQueue;
@@ -13,6 +13,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Time;
+import java.time.Duration;
+import java.time.LocalTime;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -48,6 +51,7 @@ class ConnectionSingleton {
 public class Alquiler_bicis {
 
     public static final String FILA_OCULTA = "Bici ref: 100 (No disponible)";
+   
 
     private JFrame frameTienda;
     private DefaultTableModel modelBi;
@@ -409,12 +413,22 @@ public class Alquiler_bicis {
 	    public void actionPerformed(ActionEvent e) {
 
 		try {
+			
+			Connection con = ConnectionSingleton.getConnection();
+			
+			//Obtengo la hora de alquiler
+			LocalTime hora_alquiler = LocalTime.now();
+			PreparedStatement pstmt_hora_alq = con.prepareStatement("UPDATE bici SET hora_alquiler = ? WHERE cod_bici = ?");
+			pstmt_hora_alq.setTime(1, Time.valueOf(hora_alquiler));
+			pstmt_hora_alq.setInt(2, (int) cBoxAlqCodBic.getSelectedItem());
+			pstmt_hora_alq.executeUpdate();
+			pstmt_hora_alq.close();
 
 		    int codUsuAlq = 0;
 		    int checkCodBici = 0;
 		    int codBiciLibre = 0;
 
-		    Connection con = ConnectionSingleton.getConnection();
+		    
 		    PreparedStatement alqSelUs_stmt = con.prepareStatement("SELECT * FROM usuario WHERE cod_usuario=?");
 		    alqSelUs_stmt.setInt(1, (int) cBoxAlqCodUs.getSelectedItem());
 		    ResultSet alqSelUs_rs = alqSelUs_stmt.executeQuery();
@@ -539,6 +553,18 @@ public class Alquiler_bicis {
 	btnCrearBi.setFont(new Font("Silom", Font.BOLD, 15));
 	btnCrearBi.setBounds(835, 426, 103, 33);
 	frameTienda.getContentPane().add(btnCrearBi);
+	
+	JLabel lblP = new JLabel("PRECIO:");
+	lblP.setVisible(false);
+	lblP.setFont(new Font("SansSerif", Font.BOLD, 16));
+	lblP.setBounds(443, 702, 68, 24);
+	frameTienda.getContentPane().add(lblP);
+	
+	JLabel lblPrecio = new JLabel("");
+	lblPrecio.setFont(new Font("SansSerif", Font.BOLD, 16));
+	lblPrecio.setVisible(false);
+	lblPrecio.setBounds(523, 702, 85, 24);
+	frameTienda.getContentPane().add(lblPrecio);
 
 	JButton btnDev = new JButton("Devolver");
 	btnDev.addActionListener(new ActionListener() {
@@ -546,11 +572,11 @@ public class Alquiler_bicis {
 	    	
 	    	try {
 	    		
+	    		Connection con = ConnectionSingleton.getConnection();
+	    		
 	    		//Almaceno los códigos del usuario y la bici introducidos
 	    		int cod_usuario = (int)cBoxDevCodUs.getSelectedItem();
 	    		int cod_bici = (int)cBoxDevCodBic.getSelectedItem();
-	    		
-	    		Connection con = ConnectionSingleton.getConnection();
 	    		
 	    		//Obtengo la bici que tiene alquilada dicho usuario
 				PreparedStatement pstmt_devolver = con.prepareStatement("SELECT bici_cod_bici FROM usuario WHERE cod_usuario=?");
@@ -572,6 +598,45 @@ public class Alquiler_bicis {
 						pstmt_devolver_usuario.executeUpdate();
 						pstmt_devolver_bici.close();
 						pstmt_devolver_usuario.close();
+						
+						//Obtengo la hora de devolución
+						LocalTime hora_devolucion = LocalTime.now();
+						PreparedStatement pstmt_hora_dev = con.prepareStatement("UPDATE bici SET hora_devolucion = ? WHERE cod_bici = ?");
+						pstmt_hora_dev.setTime(1, Time.valueOf(hora_devolucion));
+						pstmt_hora_dev.setInt(2, cod_bici);
+						pstmt_hora_dev.executeUpdate();
+						pstmt_hora_dev.close();
+						
+						//Obtengo el tiempo de diferencia entre la hora de alquiler y la hora de devolución						
+						PreparedStatement pstmt_tiempo = con.prepareStatement("SELECT hora_alquiler FROM bici WHERE cod_bici=?");
+						pstmt_tiempo.setInt(1, cod_bici);
+						ResultSet rs_tiempo = pstmt_tiempo.executeQuery();
+						
+						if(rs_tiempo.next()) {
+							//Obtengo la hora de alquiler
+							Time hora_alquiler = rs_tiempo.getTime("hora_alquiler");
+							
+							//La convierto a LocalTime
+							LocalTime alq = hora_alquiler.toLocalTime();
+							
+							//Obtengo la diferencia entre la hora de alquiler y la de devolución
+							Duration tiempo_diferencia = Duration.between(alq, hora_devolucion);
+							long tiempo_diferencia_minutos = tiempo_diferencia.toMinutes();
+							
+							
+							double precio=0;
+							
+							//Si se pasa de media hora aplico 0.2€ por cada minuto extra
+							if(tiempo_diferencia.getSeconds() > 30) {
+								long tiempo_extra = tiempo_diferencia_minutos - 30;
+								precio = tiempo_extra * 0.2;
+							}
+							lblP.setVisible(true);
+							lblPrecio.setVisible(true);
+							lblPrecio.setText(String.valueOf(precio) + "€");
+							
+						}
+						
 						con.close();
 
 						JOptionPane.showMessageDialog(null, "Bici correctamente devuelta");
@@ -594,6 +659,10 @@ public class Alquiler_bicis {
 	btnDev.setFont(new Font("Silom", Font.BOLD, 15));
 	btnDev.setBounds(265, 627, 103, 33);
 	frameTienda.getContentPane().add(btnDev);
+	
+	
+	
+	
 
     }
 
