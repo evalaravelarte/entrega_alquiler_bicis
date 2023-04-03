@@ -1,3 +1,4 @@
+//Eva y Fernando
 package alquiler_bicis;
 
 import java.awt.EventQueue;
@@ -27,7 +28,7 @@ import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.table.DefaultTableModel;
 
-import tema8Ejercicio5_BD_Tienda.ConnectionSingleton;
+//import tema8Ejercicio5_BD_Tienda.ConnectionSingleton;
 
 class ConnectionSingleton {
 
@@ -46,7 +47,7 @@ class ConnectionSingleton {
 
 public class Alquiler_bicis {
 
-    public static final String FILA_OCULTA = "Bici ref: 100";
+    public static final String FILA_OCULTA = "Bici ref: 100 (No disponible)";
 
     private JFrame frameTienda;
     private DefaultTableModel modelBi;
@@ -260,34 +261,66 @@ public class Alquiler_bicis {
 		try {
 
 		    Connection con = ConnectionSingleton.getConnection();
-		    Statement updCBxUs_stmt = con.createStatement();
-		    ResultSet updCBxUs_rs = updCBxUs_stmt.executeQuery("SELECT cod_usuario FROM usuario");
+		    
+		     //Bloque Usario
+		    Statement updCBxUsDev_stmt = con.createStatement();
+		    ResultSet updCBxUsDev_rs = updCBxUsDev_stmt.executeQuery("SELECT cod_usuario FROM usuario WHERE bici_cod_bici IN (SELECT cod_bici FROM bici WHERE libre='Alquilada')");
+		    
+		    Statement updCBxUsAlq_stmt = con.createStatement();
+		    ResultSet updCBxUsAlq_rs = updCBxUsAlq_stmt.executeQuery("SELECT cod_usuario FROM usuario WHERE bici_cod_bici IN (SELECT cod_bici FROM bici WHERE libre='Libre')");
+		    
+		   
 		    cBoxDevCodUs.removeAllItems();
 		    cBoxAlqCodUs.removeAllItems();
-		    while (updCBxUs_rs.next()) {
-			int codUsu = updCBxUs_rs.getInt("cod_usuario");
+		    
+		    while (updCBxUsDev_rs.next()) {
+			int codUsu = updCBxUsDev_rs.getInt("cod_usuario");
 			cBoxDevCodUs.addItem(codUsu);
-			cBoxAlqCodUs.addItem(codUsu);
 
 		    }
-		    updCBxUs_stmt.close();
-		    updCBxUs_rs.close();
+		    updCBxUsDev_stmt.close();
+		    updCBxUsDev_rs.close();
+		    
+		    while (updCBxUsAlq_rs.next()) {
+				int codUsu = updCBxUsAlq_rs.getInt("cod_usuario");
+				cBoxAlqCodUs.addItem(codUsu);
 
-		    Statement updCBxBi_stmt = con.createStatement();
-		    ResultSet updCBxBi_rs = updCBxBi_stmt.executeQuery("SELECT cod_bici FROM bici");
+			    }
+			    
+			    updCBxUsAlq_stmt.close();
+			    updCBxUsAlq_rs.close();
+			    
+			//Bloque Bici
+		    Statement updCBxBiDev_stmt = con.createStatement();
+		    ResultSet updCBxBiDev_rs = updCBxBiDev_stmt.executeQuery("SELECT cod_bici FROM bici WHERE libre='Alquilada'");
 		    cBoxDevCodBic.removeAllItems();
+		    while (updCBxBiDev_rs.next()) {
+
+				int codBici = updCBxBiDev_rs.getInt("cod_bici");
+				cBoxDevCodBic.addItem(codBici);
+				//cBoxAlqCodBic.addItem(codBici);
+
+			    }
+			    //con.close();
+			    updCBxBiDev_stmt.close();
+			    updCBxBiDev_rs.close();
+		    
+		    Statement updCBxBiAlq_stmt = con.createStatement();
+		    ResultSet updCBxBiAlq_rs = updCBxBiAlq_stmt.executeQuery("SELECT cod_bici FROM bici WHERE libre='Libre'");
+		    
 		    cBoxAlqCodBic.removeAllItems();
-		    while (updCBxBi_rs.next()) {
+		    
+		    while (updCBxBiAlq_rs.next()) {
 
-			int codBici = updCBxBi_rs.getInt("cod_bici");
-			cBoxDevCodBic.addItem(codBici);
-			cBoxAlqCodBic.addItem(codBici);
+				int codBici = updCBxBiAlq_rs.getInt("cod_bici");
+				//cBoxDevCodBic.addItem(codBici);
+				cBoxAlqCodBic.addItem(codBici);
 
-		    }
-		    con.close();
-		    updCBxBi_stmt.close();
-		    updCBxBi_rs.close();
-
+			    }
+			   
+			    updCBxBiAlq_stmt.close();
+			    updCBxBiAlq_rs.close();
+			    con.close();
 		} catch (SQLException e2) {
 		    e2.printStackTrace();
 		    System.out.println("Error al cargar cBox 1");
@@ -430,9 +463,9 @@ public class Alquiler_bicis {
 
 			} else if (codBiciLibre == 100) {
 			    JOptionPane.showMessageDialog(null, "Bicicleta no disponible");
-			} else {
-			    JOptionPane.showMessageDialog(null, "Bicicleta alquilada, por favor seleccione otra");
-			}
+				} else {
+					JOptionPane.showMessageDialog(null, "Bicicleta alquilada, por favor seleccione otra");
+				}
 		    } else {
 			JOptionPane.showMessageDialog(null, "El usuario ya tiene una bicicleta en alquiler");
 		    }
@@ -510,6 +543,28 @@ public class Alquiler_bicis {
 	JButton btnDev = new JButton("Devolver");
 	btnDev.addActionListener(new ActionListener() {
 	    public void actionPerformed(ActionEvent e) {
+	    	
+	    	try {
+				Connection con = ConnectionSingleton.getConnection();
+				PreparedStatement pstmt_devolver_bici = con.prepareStatement("UPDATE bici SET libre=? WHERE cod_bici=?");
+				PreparedStatement pstmt_devolver_usuario = con.prepareStatement("UPDATE usuario SET bici_cod_bici=100 WHERE bici_cod_bici=?");
+
+				pstmt_devolver_bici.setString(1,"Libre");
+				pstmt_devolver_bici.setInt(2,(int)cBoxDevCodBic.getSelectedItem());
+				pstmt_devolver_usuario.setInt(1,(int)cBoxDevCodBic.getSelectedItem());
+				pstmt_devolver_bici.executeUpdate();
+				pstmt_devolver_usuario.executeUpdate();
+				pstmt_devolver_bici.close();
+				pstmt_devolver_usuario.close();
+				con.close();
+
+				JOptionPane.showMessageDialog(null, "Bici correctamente devuelta");
+
+			}catch(SQLException e1) {
+				JOptionPane.showMessageDialog(null, e1.getMessage(),"Error", JOptionPane.ERROR_MESSAGE);
+			}
+	    	btnActualizarBD.doClick();
+			actualizaBDprimLinea();
 
 	    }
 	});
