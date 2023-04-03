@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS `usuario` (
     FOREIGN KEY (`bici_cod_bici`)
     REFERENCES `bici` (`cod_bici`)
     ON DELETE NO ACTION
-    ON UPDATE CASCADE)
+    ON UPDATE CASCADE);
 CREATE INDEX idx_cod_usu ON usuario (`cod_usuario`);
 
 
