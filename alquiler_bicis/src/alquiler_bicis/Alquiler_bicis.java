@@ -545,21 +545,44 @@ public class Alquiler_bicis {
 	    public void actionPerformed(ActionEvent e) {
 	    	
 	    	try {
-				Connection con = ConnectionSingleton.getConnection();
-				PreparedStatement pstmt_devolver_bici = con.prepareStatement("UPDATE bici SET libre=? WHERE cod_bici=?");
-				PreparedStatement pstmt_devolver_usuario = con.prepareStatement("UPDATE usuario SET bici_cod_bici=100 WHERE bici_cod_bici=?");
+	    		
+	    		//Almaceno los códigos del usuario y la bici introducidos
+	    		int cod_usuario = (int)cBoxDevCodUs.getSelectedItem();
+	    		int cod_bici = (int)cBoxDevCodBic.getSelectedItem();
+	    		
+	    		Connection con = ConnectionSingleton.getConnection();
+	    		
+	    		//Obtengo la bici que tiene alquilada dicho usuario
+				PreparedStatement pstmt_devolver = con.prepareStatement("SELECT bici_cod_bici FROM usuario WHERE cod_usuario=?");
+				pstmt_devolver.setInt(1, cod_usuario);
+				ResultSet rs_dev = pstmt_devolver.executeQuery();
+				
+				if(rs_dev.next()) {
+					int bici_cod_bici = rs_dev.getInt("bici_cod_bici");
+					
+					//Si la bici escogida en el comboBox coincide con la del usuario, realizo la devolución
+					if(bici_cod_bici == cod_bici) {
+						PreparedStatement pstmt_devolver_bici = con.prepareStatement("UPDATE bici SET libre=? WHERE cod_bici=?");
+						PreparedStatement pstmt_devolver_usuario = con.prepareStatement("UPDATE usuario SET bici_cod_bici=100 WHERE bici_cod_bici=?");
 
-				pstmt_devolver_bici.setString(1,"Libre");
-				pstmt_devolver_bici.setInt(2,(int)cBoxDevCodBic.getSelectedItem());
-				pstmt_devolver_usuario.setInt(1,(int)cBoxDevCodBic.getSelectedItem());
-				pstmt_devolver_bici.executeUpdate();
-				pstmt_devolver_usuario.executeUpdate();
-				pstmt_devolver_bici.close();
-				pstmt_devolver_usuario.close();
-				con.close();
+						pstmt_devolver_bici.setString(1,"Libre");
+						pstmt_devolver_bici.setInt(2,(int)cBoxDevCodBic.getSelectedItem());
+						pstmt_devolver_usuario.setInt(1,(int)cBoxDevCodBic.getSelectedItem());
+						pstmt_devolver_bici.executeUpdate();
+						pstmt_devolver_usuario.executeUpdate();
+						pstmt_devolver_bici.close();
+						pstmt_devolver_usuario.close();
+						con.close();
 
-				JOptionPane.showMessageDialog(null, "Bici correctamente devuelta");
-
+						JOptionPane.showMessageDialog(null, "Bici correctamente devuelta");
+						}else {
+							JOptionPane.showMessageDialog(null, "El usuario y la bici no coinciden");
+						}
+				}
+				
+				
+				
+				
 			}catch(SQLException e1) {
 				JOptionPane.showMessageDialog(null, e1.getMessage(),"Error", JOptionPane.ERROR_MESSAGE);
 			}
