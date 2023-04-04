@@ -627,7 +627,7 @@ public class Alquiler_bicis {
 							double precio=0;
 							
 							//Si se pasa de media hora aplico 0.2€ por cada minuto extra
-							if(tiempo_diferencia.getSeconds() > 30) {
+							if(tiempo_diferencia_minutos > 30) {
 								long tiempo_extra = tiempo_diferencia_minutos - 30;
 								precio = tiempo_extra * 0.2;
 							}
