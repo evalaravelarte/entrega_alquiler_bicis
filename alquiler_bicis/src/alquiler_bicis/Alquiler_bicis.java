@@ -532,7 +532,7 @@ public class Alquiler_bicis {
 
 		try {
 		    Connection con = ConnectionSingleton.getConnection();
-		    PreparedStatement crear_pstmt = con.prepareStatement("INSERT INTO bici VALUES(?,?)");
+		    PreparedStatement crear_pstmt = con.prepareStatement("INSERT INTO bici(cod_bici,libre) VALUES(?,?)");
 
 		    crear_pstmt.setInt(1, Integer.parseInt(txtFCBcod.getText()));
 		    crear_pstmt.setString(2, "Libre");
